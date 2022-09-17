@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { convertHourStringToMinutes } from "./utils/convert-hour-string-to-minutes";
 import { convertMinutesToHourString } from "./utils/convert-minutes-to-hour-string";
+import { checkIfAdsGamesPostRequestIsValid } from "./validations/ads-games-post";
 
 const app = express();
 
@@ -46,8 +47,7 @@ app.get("/games/:id/ads", async (req, res) => {
       createdAt: "asc",
     },
   });
-
-  const ads = response.map((ad) => {
+  const ads: any = response.map((ad: any) => {
     return {
       ...ad,
       weekDays: ad.weekDays.split(","),
@@ -61,22 +61,26 @@ app.get("/games/:id/ads", async (req, res) => {
 app.post("/ads/games/:gameId", async (req, res) => {
   const gameId = req.params.gameId;
   const body: any = req.body;
+  const data = {
+    gameId,
+    name: body?.name,
+    yearsPlaying: body?.yearsPlaying,
+    discord: body?.discord,
+    weekDays: body?.weekDays?.join(","),
+    hourStart: body?.hourStart && convertHourStringToMinutes(body?.hourStart),
+    hourEnd: body?.hourEnd && convertHourStringToMinutes(body?.hourEnd),
+    useVoiceChannel: body?.useVoiceChannel,
+  };
 
-  // Validação zod javascript
+  const { isValid, valuesEmpty } = checkIfAdsGamesPostRequestIsValid(data);
 
-  const ad = await prisma.ad.create({
-    data: {
-      gameId,
-      name: body.name,
-      yearsPlaying: body.yearsPlaying,
-      discord: body.discord,
-      weekDays: body.weekDays.join(","),
-      hourStart: convertHourStringToMinutes(body.hourStart),
-      hourEnd: convertHourStringToMinutes(body.hourEnd),
-      useVoiceChannel: body.useVoiceChannel,
-    },
-  });
+  if (!isValid) {
+    return res.status(422).send({
+      message: `${valuesEmpty?.join(",")} cannot be null`,
+    });
+  }
 
+  const ad = await prisma.ad.create({ data });
   return res.status(201).json(ad);
 });
 
