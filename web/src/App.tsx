@@ -4,11 +4,8 @@ import { GameBanner } from "./components/GameBanner";
 import { useEffect, useState } from "react";
 import { CreateAdBanner } from "./components/CreateAdBanner";
 import { CreateAdModal } from "./components/CreateAdModal";
+import { useKeenSlider } from "keen-slider/react";
 import axios from "axios";
-
-// DICAS
-// RESPONSIVO adicionar keen-slider para o carroussel validação(react-hook-form) e teste
-// autenticação
 
 interface GamesProps {
   id: string;
@@ -17,13 +14,24 @@ interface GamesProps {
   _count: { ads: number };
 }
 function App() {
+  const [slidesRef] = useKeenSlider<HTMLDivElement>({
+    loop: true,
+    mode: "free",
+    slides: {
+      perView: 6,
+      spacing: 15,
+    },
+  });
   const [games, setGames] = useState<GamesProps[]>([]);
+  const [openDialog, setOpenDialog] = useState(false);
+
+  async function getAllGames() {
+    const { data } = await axios.get("http://localhost:3333/games");
+    setGames(data);
+  }
 
   useEffect(() => {
-    (async () => {
-      const { data } = await axios.get("http://localhost:3333/games");
-      setGames(data);
-    })();
+    getAllGames();
   }, []);
 
   return (
@@ -37,7 +45,7 @@ function App() {
         está aqui.
       </h1>
 
-      <div className="grid grid-cols-6 gap-6 mt-16">
+      <div className="grid grid-cols-6 gap-6 mt-16 keen-slider" ref={slidesRef}>
         {games.map((game) => (
           <GameBanner
             key={game.id}
@@ -48,10 +56,10 @@ function App() {
         ))}
       </div>
 
-      <Dialog.Root>
+      <Dialog.Root open={openDialog} onOpenChange={setOpenDialog}>
         <CreateAdBanner />
 
-        <CreateAdModal />
+        <CreateAdModal onOpenChange={setOpenDialog} getAllGames={getAllGames} />
       </Dialog.Root>
     </div>
   );

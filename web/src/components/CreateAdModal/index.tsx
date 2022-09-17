@@ -2,27 +2,26 @@ import * as Dialog from "@radix-ui/react-dialog";
 import * as Checkbox from "@radix-ui/react-checkbox";
 import * as Select from "@radix-ui/react-select";
 import * as ToggleGroup from "@radix-ui/react-toggle-group";
-import * as Toast from "@radix-ui/react-toast";
+import { ToastContainer, toast } from "react-toastify";
 import axios from "axios";
 
-import {
-  ArrowDown,
-  CaretDown,
-  Check,
-  CheckCircle,
-  GameController,
-} from "phosphor-react";
+import { CaretDown, Check, GameController } from "phosphor-react";
 
 import { TextField } from "../inputs/TextField";
 import { FormEvent, useEffect, useState } from "react";
-import { ToastAlert } from "../ToastAlert";
 
 interface GamesProps {
   id: string;
   title: string;
 }
 
-export function CreateAdModal() {
+interface Props {
+  onOpenChange: (value: boolean) => void;
+  getAllGames: () => void;
+}
+
+export function CreateAdModal(props: Props) {
+  const { onOpenChange, getAllGames } = props;
   const [games, setGames] = useState<GamesProps[]>([]);
   const [weekDays, setWeekDays] = useState<string[]>([]);
 
@@ -37,7 +36,6 @@ export function CreateAdModal() {
 
   async function handleCreateAd(event: FormEvent) {
     event.preventDefault();
-    // validações
     try {
       const formData = new FormData(event.target as HTMLFormElement);
 
@@ -52,13 +50,12 @@ export function CreateAdModal() {
         hourEnd: data.hourEnd,
         useVoiceChannel,
       };
-      await axios.post(
-        `http://localhost:3333/ads/games/${data.game}`,
-        request
-      );
-      alert("Anúncio criado com sucesso");
+      await axios.post(`http://localhost:3333/ads/games/${data.game}`, request);
+      toast.success("Anúncio criado com sucesso");
+      await getAllGames();
+      onOpenChange(false);
     } catch (error) {
-      alert(error);
+      toast.error(`ERRO: Ocorreu um erro ao incluir anúncio`);
     } finally {
     }
   }
@@ -283,11 +280,13 @@ export function CreateAdModal() {
               className="bg-violet-500 px-5 h-12 rounded-md font-semibold flex items-center gap-3 hover:bg-violet-600"
             >
               <GameController size={24} />
-              Encontra duo
+              Encontrar duo
             </button>
           </footer>
         </form>
       </Dialog.Content>
+
+      <ToastContainer />
     </Dialog.Portal>
   );
 }

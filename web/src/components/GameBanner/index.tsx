@@ -6,7 +6,7 @@ interface Props {
 export function GameBanner(props: Props) {
   const { adsCount, bannerUrl, title } = props;
   return (
-    <a href="" className="relative rounded-lg overflow-hidden">
+    <div className="relative rounded-lg overflow-hidden keen-slider__slide">
       <img src={bannerUrl} alt={title} />
 
       <div className="w-full pt-16 pb-4 px-4 bg-nlw-gradient-game absolute bottom-0 left-0 right-0">
@@ -15,6 +15,6 @@ export function GameBanner(props: Props) {
           {adsCount} anúncio(s)
         </span>
       </div>
-    </a>
+    </div>
   );
 }
